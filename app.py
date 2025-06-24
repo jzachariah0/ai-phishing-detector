@@ -38,7 +38,7 @@ def init_detector():
         behavior_analyzer = None
         return False
     
-    
+
 
 # Add src to path so we can import our modules
 sys.path.append(str(Path(__file__).parent / 'src' / 'core'))
@@ -90,47 +90,118 @@ def analyze():
         if not email_content.strip():
             return jsonify({'error': 'Please provide email content to analyze'}), 400
         
-        # Get or create user
-        if not session.get('user_id'):
-            user_id = behavior_analyzer.create_user(
-                username=user_email.split('@')[0],
-                email=user_email
-            )
-            session['user_id'] = user_id
-            session['user_email'] = user_email
-        else:
-            user_id = session['user_id']
-        
-        # Run analysis
-        print(f"Analyzing email for user: {user_id}")
-        analysis_results = detector.analyze_email(user_id, email_content)
-        
-        # Format results for web display
-        web_results = format_analysis_for_web(analysis_results)
+        # Simple analysis for Heroku deployment
+        analysis_results = perform_simple_analysis(email_content, user_email)
         
         return jsonify({
             'success': True,
-            'results': web_results,
-            'user_id': user_id
+            'results': analysis_results
         })
         
     except Exception as e:
         print(f"Analysis error: {e}")
         return jsonify({'error': f'Analysis failed: {str(e)}'}), 500
 
-@app.route('/user-stats')
-def user_stats():
-    """Get user statistics"""
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            return jsonify({'error': 'No user session found'}), 400
-        
-        stats = behavior_analyzer.get_user_stats(user_id)
-        return jsonify({'success': True, 'stats': stats})
-        
-    except Exception as e:
-        return jsonify({'error': f'Failed to get user stats: {str(e)}'}), 500
+def perform_simple_analysis(email_content, user_email):
+    """Simplified analysis that works without ML libraries"""
+    import re
+    from datetime import datetime
+    
+    # Extract basic info
+    sender_match = re.search(r'From:\s*(.+)', email_content, re.IGNORECASE)
+    subject_match = re.search(r'Subject:\s*(.+)', email_content, re.IGNORECASE)
+    
+    sender = sender_match.group(1).strip() if sender_match else 'Unknown'
+    subject = subject_match.group(1).strip() if subject_match else 'Unknown'
+    
+    # Simple suspicious keyword detection
+    suspicious_keywords = ['urgent', 'verify', 'click here', 'suspended', 'expired', 'winner', 'refund']
+    found_keywords = [kw for kw in suspicious_keywords if kw.lower() in email_content.lower()]
+    
+    # Simple URL detection
+    urls = re.findall(r'http[s]?://[^\s<>"]+', email_content)
+    
+    # Calculate simple risk score
+    risk_score = 0.0
+    risk_score += len(found_keywords) * 0.15
+    risk_score += len(urls) * 0.1
+    if any(domain in sender.lower() for domain in ['suspicious', 'fake', 'phishing']):
+        risk_score += 0.3
+    
+    risk_score = min(risk_score, 1.0)
+    
+    # Determine risk level
+    if risk_score >= 0.7:
+        risk_level = 'HIGH'
+        risk_color = '#dc3545'
+        action = 'BLOCK'
+    elif risk_score >= 0.4:
+        risk_level = 'MEDIUM'
+        risk_color = '#fd7e14'
+        action = 'QUARANTINE'
+    else:
+        risk_level = 'LOW'
+        risk_color = '#28a745'
+        action = 'ALLOW'
+    
+    return {
+        'analysis_id': f"DEMO_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        'timestamp': datetime.now().isoformat(),
+        'duration': 0.05,
+        'risk_assessment': {
+            'final_score': risk_score,
+            'risk_level': risk_level,
+            'risk_color': risk_color,
+            'recommended_action': action,
+            'is_phishing': risk_score >= 0.4,
+            'confidence': 0.85,
+            'reasoning': f"Detected {len(found_keywords)} suspicious keywords and {len(urls)} URLs",
+            'component_scores': {
+                'keyword_analysis': len(found_keywords) * 0.15,
+                'url_analysis': len(urls) * 0.1,
+                'sender_analysis': 0.1,
+                'content_analysis': risk_score * 0.5
+            }
+        },
+        'email_summary': {
+            'sender': sender,
+            'subject': subject,
+            'body_length': len(email_content),
+            'url_count': len(urls),
+            'suspicious_keywords': len(found_keywords)
+        },
+        'threat_intelligence': {
+            'primary_threat': 'Suspicious Email' if risk_score > 0.4 else 'Legitimate Email',
+            'sophistication': 'Medium' if risk_score > 0.6 else 'Low',
+            'business_impact': 'High' if risk_score > 0.7 else 'Medium' if risk_score > 0.4 else 'Low',
+            'mitre_techniques': [
+                {'id': 'T1566.001', 'name': 'Spearphishing Attachment', 'tactic': 'Initial Access'},
+                {'id': 'T1566.002', 'name': 'Spearphishing Link', 'tactic': 'Initial Access'}
+            ]
+        },
+        'recommendations': [
+            {
+                'priority': 'HIGH',
+                'action': 'Security Training',
+                'description': 'Provide user awareness training on phishing detection',
+                'timeline': 'Within 24 hours'
+            },
+            {
+                'priority': 'MEDIUM', 
+                'action': 'Monitor',
+                'description': 'Monitor for similar suspicious emails',
+                'timeline': 'Ongoing'
+            }
+        ],
+        'generated_rules': [
+            {
+                'name': f'suspicious_email_rule_{len(found_keywords)}',
+                'description': f'Detects emails with {len(found_keywords)} suspicious keywords',
+                'confidence': 0.8,
+                'rule_type': 'keyword_detection'
+            }
+        ]
+    }
 
 @app.route('/demo-samples')
 def demo_samples():
