@@ -1,0 +1,15 @@
+{
+  "total_emails": 10,
+  "legitimate_count": 5,
+  "phishing_count": 5,
+  "features": [
+    "sender",
+    "subject",
+    "body",
+    "label"
+  ],
+  "label_encoding": {
+    "0": "legitimate",
+    "1": "phishing"
+  }
+}

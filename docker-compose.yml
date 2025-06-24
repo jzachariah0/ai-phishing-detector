@@ -1,0 +1,45 @@
+ version: '3.8'
+
+services:
+  ai-phishing-detector:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=your-production-secret-key-change-this
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    networks:
+      - ai-detector-network
+
+  # Redis for caching (enterprise feature)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - ai-detector-network
+
+volumes:
+  redis_data:
+
+networks:
+  ai-detector-network:
+    driver: bridge

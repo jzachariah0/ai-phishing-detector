@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Analysis | AI Phishing Detector</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        :root {
+            /* Light mode colors */
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-primary: #333;
+            --text-secondary: #6c757d;
+            --header-gradient-start: #1e3c72;
+            --header-gradient-end: #2a5298;
+            --input-bg: white;
+            --shadow-color: rgba(0,0,0,0.1);
+            --border-color: rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] {
+            /* Dark mode colors */
+            --bg-gradient-start: #0a0a0a;
+            --bg-gradient-end: #1a1a2e;
+            --card-bg: rgba(22, 22, 35, 0.95);
+            --text-primary: #e8e8e8;
+            --text-secondary: #a8a8b3;
+            --header-gradient-start: #0f0f23;
+            --header-gradient-end: #16213e;
+            --input-bg: rgba(30, 30, 45, 0.9);
+            --shadow-color: rgba(0,0,0,0.8);
+            --border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .analysis-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px var(--shadow-color);
+            backdrop-filter: blur(10px);
+            margin: 2rem auto;
+            max-width: 1200px;
+            transition: all 0.3s ease;
+        }
+        
+        .header-section {
+            background: linear-gradient(135deg, var(--header-gradient-start) 0%, var(--header-gradient-end) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .input-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem;
+            box-shadow: 0 10px 25px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+        
+        .results-section {
+            margin: 2rem;
+            display: none;
+        }
+        
+        .risk-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px var(--shadow-color);
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .risk-score-display {
+            text-align: center;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+        
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            position: relative;
+        }
+        
+        .analyze-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 1rem 2rem;
+            color: white;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] .analyze-btn {
+            background: linear-gradient(135deg, #00d9ff 0%, #667eea 100%);
+        }
+        
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+        
+        .demo-btn {
+            background: #6c757d;
+            border: none;
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            color: white;
+            margin: 0.2rem;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .demo-btn:hover {
+            background: #5a6268;
+        }
+        
+        .component-score {
+            background: var(--input-bg);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .mitre-technique {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            margin: 0.2rem;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+
+        [data-theme="dark"] .mitre-technique {
+            background: linear-gradient(45deg, #00d9ff, #667eea);
+        }
+        
+        .recommendation-item {
+            border-left: 4px solid #667eea;
+            background: var(--input-bg);
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0 10px 10px 0;
+            color: var(--text-primary);
+            border-top: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-primary);
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle i {
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* Form Controls Dark Mode */
+        [data-theme="dark"] .form-control {
+            background-color: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .form-control:focus {
+            background-color: var(--input-bg);
+            border-color: #667eea;
+            color: var(--text-primary);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        [data-theme="dark"] .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .form-label {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] .demo-btn {
+            background: #555555;
+            color: white;
+        }
+
+        [data-theme="dark"] .demo-btn:hover {
+            background: #666666;
+        }
+
+        [data-theme="dark"] .badge {
+            background-color: #555555 !important;
+        }
+
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .success-message {
+            background: #28a745;
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="analysis-container">
+            <!-- Header Section -->
+            <div class="header-section position-relative">
+                <a href="/" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Dashboard
+                </a>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                    <span id="theme-text">Dark Mode</span>
+                </button>
+                <h1><i class="fas fa-search-plus"></i> Email Analysis Center</h1>
+                <p class="lead mb-0">Advanced AI-Powered Phishing Detection</p>
+            </div>
+            
+            <!-- Input Section -->
+            <div class="input-section">
+                <div class="error-message" id="error-message"></div>
+                <div class="success-message" id="success-message"></div>
+                
+                <form id="analysis-form">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="email-content" class="form-label">
+                                    <i class="fas fa-envelope"></i> Email Content to Analyze
+                                </label>
+                                <textarea class="form-control" id="email-content" name="email_content" rows="12" 
+                                          placeholder="Paste the complete email content here (including headers like From:, Subject:, To:)..." required></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="user-email" class="form-label">
+                                    <i class="fas fa-user"></i> Your Email Address
+                                </label>
+                                <input type="email" class="form-control" id="user-email" name="user_email" 
+                                       value="demo@company.com" placeholder="your.email@company.com">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-vial"></i> Demo Samples</label>
+                                <div>
+                                    <button type="button" class="demo-btn" onclick="loadDemoSample('phishing')">
+                                        Phishing Example
+                                    </button>
+                                    <button type="button" class="demo-btn" onclick="loadDemoSample('legitimate')">
+                                        Legitimate Example
+                                    </button>
+                                    <button type="button" class="demo-btn" onclick="loadDemoSample('sophisticated')">
+                                        Sophisticated Attack
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="analyze-btn">
+                                <i class="fas fa-shield-alt"></i> Analyze Email
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Loading Spinner -->
+                <div class="loading-spinner" id="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Analyzing...</span>
+                    </div>
+                    <p class="mt-3">AI System Processing Email...</p>
+                    <small class="text-muted">Running ML Classification, NLP Analysis, Behavioral Assessment...</small>
+                </div>
+            </div>
+            
+            <!-- Results Section -->
+            <div class="results-section" id="results">
+                <!-- Risk Assessment -->
+                <div class="risk-card">
+                    <div class="risk-score-display" id="risk-display">
+                        <div class="score-circle" id="score-circle">
+                            <span id="risk-score">0.0</span>
+                        </div>
+                        <h3 id="risk-level">ANALYZING...</h3>
+                        <p class="mb-0" id="risk-action">Please wait...</p>
+                    </div>
+                    <div class="text-center">
+                        <p id="risk-reasoning" class="text-muted mb-0"></p>
+                    </div>
+                </div>
+                
+                <!-- Analysis Details -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="risk-card">
+                            <h5><i class="fas fa-envelope-open-text"></i> Email Summary</h5>
+                            <div id="email-summary">
+                                <p><strong>Sender:</strong> <span id="email-sender">-</span></p>
+                                <p><strong>Subject:</strong> <span id="email-subject">-</span></p>
+                                <p><strong>Body Length:</strong> <span id="email-body-length">-</span> characters</p>
+                                <p><strong>URLs Found:</strong> <span id="email-urls">-</span></p>
+                                <p><strong>Suspicious Keywords:</strong> <span id="email-keywords">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="risk-card">
+                            <h5><i class="fas fa-chart-bar"></i> Component Scores</h5>
+                            <div id="component-scores">
+                                <div class="component-score">
+                                    <span>Loading...</span>
+                                    <span><strong>-</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Threat Intelligence -->
+                <div class="risk-card">
+                    <h5><i class="fas fa-brain"></i> AI Threat Intelligence</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Primary Threat:</strong> <span id="primary-threat">-</span></p>
+                            <p><strong>Sophistication:</strong> <span id="sophistication">-</span></p>
+                            <p><strong>Business Impact:</strong> <span id="business-impact">-</span></p>
+                        </div>
+                        <div class="col-md-8">
+                            <p><strong>MITRE ATT&CK Techniques:</strong></p>
+                            <div id="mitre-techniques">
+                                <span class="mitre-technique">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Recommendations -->
+                <div class="risk-card">
+                    <h5><i class="fas fa-shield-alt"></i> Security Recommendations</h5>
+                    <div id="recommendations">
+                        <div class="recommendation-item">
+                            <h6>Loading recommendations...</h6>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Generated Rules -->
+                <div class="risk-card">
+                    <h5><i class="fas fa-cogs"></i> Generated Detection Rules</h5>
+                    <div id="generated-rules">
+                        <div class="mb-3">
+                            <h6>Loading rules...</h6>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Analysis Metadata -->
+                <div class="risk-card">
+                    <h6><i class="fas fa-info-circle"></i> Analysis Details</h6>
+                    <small class="text-muted">
+                        Analysis ID: <span id="analysis-id">-</span> | 
+                        Duration: <span id="analysis-duration">-</span>s | 
+                        Timestamp: <span id="analysis-timestamp">-</span>
+                    </small>
+                </div>
+
+                <!-- Analyze Another Button -->
+                <button class="analyze-btn mt-3" onclick="analyzeAnother()">
+                    <i class="fas fa-redo"></i> Analyze Another Email
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let demoSamples = {};
+        
+        // Dark/Light Mode Toggle Functionality
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            updateThemeButton(newTheme);
+            
+            // Add smooth transition effect
+            document.body.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+                document.body.style.transition = '';
+            }, 300);
+        }
+        
+        function updateThemeButton(theme) {
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            
+            if (theme === 'dark') {
+                themeIcon.className = 'fas fa-sun';
+                themeText.textContent = 'Light Mode';
+            } else {
+                themeIcon.className = 'fas fa-moon';
+                themeText.textContent = 'Dark Mode';
+            }
+        }
+        
+        // Initialize theme on page load
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeButton(savedTheme);
+        }
+        
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Load demo samples
+        fetch('/demo-samples')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    demoSamples = data.samples;
+                }
+            })
+            .catch(error => console.log('Demo samples failed to load:', error));
+        
+        function loadDemoSample(type) {
+            if (demoSamples[type]) {
+                document.getElementById('email-content').value = demoSamples[type].content;
+                showSuccess(`Loaded ${demoSamples[type].name}`);
+            } else {
+                showError('Demo sample not available');
+            }
+        }
+        
+        // Handle form submission
+        document.getElementById('analysis-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const emailContent = formData.get('email_content');
+            
+            if (!emailContent.trim()) {
+                showError('Please enter email content to analyze');
+                return;
+            }
+            
+            // Show loading
+            document.querySelector('.input-section').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            
+            // Submit for analysis
+            fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.success && data.results) {
+                    displayResults(data.results);
+                    document.getElementById('results').style.display = 'block';
+                } else {
+                    showError('Analysis failed: ' + (data.error || 'Unknown error'));
+                    document.querySelector('.input-section').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Analysis error:', error);
+                document.getElementById('loading').style.display = 'none';
+                showError('Analysis failed: ' + error.message);
+                document.querySelector('.input-section').style.display = 'block';
+            });
+        });
+        
+        function displayResults(results) {
+            try {
+                // Safely access risk assessment
+                const risk = results.risk_assessment || {};
+                
+                // Update risk score display
+                document.getElementById('risk-score').textContent = risk.final_score || '0.0';
+                document.getElementById('risk-level').textContent = risk.risk_level || 'UNKNOWN';
+                document.getElementById('risk-action').textContent = `Recommended: ${risk.recommended_action || 'Unknown'}`;
+                document.getElementById('risk-reasoning').textContent = risk.reasoning || 'No reasoning available';
+                
+                // Update score circle color
+                const scoreCircle = document.getElementById('score-circle');
+                const riskColor = risk.risk_color || '#6c757d';
+                scoreCircle.style.background = riskColor;
+                
+                // Update risk display background
+                const riskDisplay = document.getElementById('risk-display');
+                riskDisplay.style.background = `linear-gradient(135deg, ${riskColor}22, ${riskColor}11)`;
+                riskDisplay.style.border = `2px solid ${riskColor}`;
+                
+                // Update email summary
+                const email = results.email_summary || {};
+                document.getElementById('email-sender').textContent = email.sender || 'Unknown';
+                document.getElementById('email-subject').textContent = email.subject || 'Unknown';
+                document.getElementById('email-body-length').textContent = email.body_length || '0';
+                document.getElementById('email-urls').textContent = email.url_count || '0';
+                document.getElementById('email-keywords').textContent = email.suspicious_keywords || '0';
+                
+                // Update component scores
+                const scoresDiv = document.getElementById('component-scores');
+                scoresDiv.innerHTML = '';
+                
+                const componentScores = risk.component_scores || {};
+                if (Object.keys(componentScores).length > 0) {
+                    for (const [component, score] of Object.entries(componentScores)) {
+                        const scoreDiv = document.createElement('div');
+                        scoreDiv.className = 'component-score';
+                        scoreDiv.innerHTML = `
+                            <span>${component.replace(/_/g, ' ').toUpperCase()}</span>
+                            <span><strong>${score}</strong></span>
+                        `;
+                        scoresDiv.appendChild(scoreDiv);
+                    }
+                } else {
+                    scoresDiv.innerHTML = '<div class="component-score"><span>No component scores available</span></div>';
+                }
+                
+                // Update threat intelligence
+                const threat = results.threat_intelligence || {};
+                document.getElementById('primary-threat').textContent = threat.primary_threat || 'Unknown';
+                document.getElementById('sophistication').textContent = threat.sophistication || 'Unknown';
+                document.getElementById('business-impact').textContent = threat.business_impact || 'Unknown';
+                
+                // Update MITRE techniques
+                const mitreDiv = document.getElementById('mitre-techniques');
+                mitreDiv.innerHTML = '';
+                
+                const mitreArray = threat.mitre_techniques || [];
+                if (mitreArray.length > 0) {
+                    mitreArray.forEach(technique => {
+                        const span = document.createElement('span');
+                        span.className = 'mitre-technique';
+                        span.textContent = `${technique.id || 'Unknown'}: ${technique.name || 'Unknown'}`;
+                        mitreDiv.appendChild(span);
+                    });
+                } else {
+                    mitreDiv.innerHTML = '<span class="mitre-technique">No MITRE techniques identified</span>';
+                }
+                
+                // Update recommendations
+                const recDiv = document.getElementById('recommendations');
+                recDiv.innerHTML = '';
+                
+                const recommendations = results.recommendations || [];
+                if (recommendations.length > 0) {
+                    recommendations.forEach((rec, index) => {
+                        const recItem = document.createElement('div');
+                        recItem.className = 'recommendation-item';
+                        
+                        const priority = rec.priority || 'unknown';
+                        const badgeClass = priority.toLowerCase() === 'high' ? 'danger' : 
+                                         priority.toLowerCase() === 'medium' ? 'warning' : 'secondary';
+                        
+                        recItem.innerHTML = `
+                            <h6>${index + 1}. ${rec.action || 'Unknown Action'} <span class="badge bg-${badgeClass}">${priority}</span></h6>
+                            <p class="mb-1">${rec.description || 'No description available'}</p>
+                            <small class="text-muted">Timeline: ${rec.timeline || 'Unknown'}</small>
+                        `;
+                        recDiv.appendChild(recItem);
+                    });
+                } else {
+                    recDiv.innerHTML = '<div class="recommendation-item"><h6>No specific recommendations available</h6></div>';
+                }
+                
+                // Update generated rules
+                const rulesDiv = document.getElementById('generated-rules');
+                rulesDiv.innerHTML = '';
+                
+                const generatedRules = results.generated_rules || [];
+                if (generatedRules.length > 0) {
+                    generatedRules.forEach(rule => {
+                        const ruleDiv = document.createElement('div');
+                        ruleDiv.className = 'mb-3';
+                        ruleDiv.innerHTML = `
+                            <h6>${rule.name || 'Unknown Rule'} <span class="badge bg-info">${rule.confidence || 'Unknown'}</span></h6>
+                            <p class="mb-0">${rule.description || 'No description available'}</p>
+                            <small class="text-muted">Type: ${rule.rule_type || 'Unknown'}</small>
+                        `;
+                        rulesDiv.appendChild(ruleDiv);
+                    });
+                } else {
+                    rulesDiv.innerHTML = '<div class="mb-3"><h6>No detection rules generated</h6></div>';
+                }
+                
+                // Update metadata
+                document.getElementById('analysis-id').textContent = results.analysis_id || 'Unknown';
+                document.getElementById('analysis-duration').textContent = results.duration || '0';
+                document.getElementById('analysis-timestamp').textContent = results.timestamp ? 
+                    new Date(results.timestamp).toLocaleString() : 'Unknown';
+                
+                showSuccess('Email analysis completed successfully!');
+                
+            } catch (error) {
+                console.error('Error displaying results:', error);
+                showError('Error displaying results: ' + error.message);
+            }
+        }
+        
+        // Add "Analyze Another Email" functionality
+        function analyzeAnother() {
+            document.getElementById('results').style.display = 'none';
+            document.querySelector('.input-section').style.display = 'block';
+            document.getElementById('email-content').value = '';
+            
+            // Reset form state
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('success-message').style.display = 'none';
+        }
+        
+        // Initialize theme when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+        });
+    </script>
+</body>
+</html>

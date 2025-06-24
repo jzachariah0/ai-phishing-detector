@@ -1,0 +1,11 @@
+sender,subject,body,label
+hr@company.com,Weekly Team Meeting,"Hi team, reminder about our weekly meeting this Thursday at 2 PM. Please bring your project updates.",0
+newsletter@techcrunch.com,Daily Tech News Digest,Here are today's top technology stories. Read about the latest AI developments and startup funding.,0
+support@github.com,Your repository has been updated,"Your repository ""ai-project"" has received 3 new commits. View the changes in your dashboard.",0
+billing@aws.amazon.com,Your monthly AWS bill is ready,Your AWS bill for this month is $23.45. View detailed usage and download your invoice.,0
+noreply@linkedin.com,You have 3 new connection requests,"John Smith, Sarah Wilson, and Mike Johnson want to connect with you on LinkedIn.",0
+security@paypaI-alerts.com,URGENT: Your PayPal account has been limited,Your account has been limited due to suspicious activity. Click here immediately to verify your identity and restore access. http://fake-paypal.malicious.com/verify,1
+no-reply@amazon-security.net,Your Amazon account will be suspended,We detected unauthorized access to your account. Verify your identity now or your account will be permanently suspended. Act fast! http://amazon-fake.evil.com,1
+alerts@microsoft-team.org,Microsoft Security Alert - Action Required,Your Microsoft account shows signs of compromise. Download our security tool immediately to protect your data. http://microsoft-security-fake.com/download,1
+service@chase-bankaccount.info,Your account has been frozen - Immediate action required,Your Chase bank account has been frozen due to suspicious transactions. Log in immediately to unlock: http://chase-unlock.suspicious.com,1
+irs-refund@government-official.org,"You are eligible for a $2,847 tax refund","The IRS has processed your tax return. You are eligible for a refund of $2,847. Claim now before it expires: http://irs-refund-claim.fake.gov",1
