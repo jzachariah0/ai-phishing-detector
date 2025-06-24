@@ -12,6 +12,34 @@ import secrets
 import sys
 from pathlib import Path
 
+# Simplified imports for Heroku deployment
+try:
+    from src.core.integrated_detector import IntegratedPhishingDetector
+    ML_AVAILABLE = True
+except ImportError:
+    ML_AVAILABLE = False
+    print("ML components not available - running in demo mode")
+
+# Modify init_detector function
+def init_detector():
+    global detector, behavior_analyzer
+    try:
+        if ML_AVAILABLE:
+            detector = IntegratedPhishingDetector()
+            behavior_analyzer = UserBehaviorAnalyzer()
+        else:
+            detector = None
+            behavior_analyzer = None
+        print("✅ System initialized!")
+        return True
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        detector = None
+        behavior_analyzer = None
+        return False
+    
+    
+
 # Add src to path so we can import our modules
 sys.path.append(str(Path(__file__).parent / 'src' / 'core'))
 
@@ -290,10 +318,11 @@ if __name__ == '__main__':
     print("🚀 AI-DRIVEN PHISHING DETECTOR - WEB APPLICATION")
     print("="*60)
     print("🌐 Starting web server...")
-    print("📱 Access your application at: http://localhost:5000")
     print("🔒 AI Detection System: Ready")
     print("📊 Real-time Analytics: Enabled")
     print("="*60)
     
     # Run the Flask app
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
